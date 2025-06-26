@@ -6,6 +6,7 @@ type Config struct {
 	App           string `mapstructure:"app_port"`
 	DBDriver      string `mapstructure:"db_driver"`
 	ServerAddress string `mapstructure:"server_address"`
+	Timeout       int    `mapstructure:"timeout"`
 
 	DBHost     string `mapstructure:"db_host"`
 	DBPort     string `mapstructure:"db_port"`
