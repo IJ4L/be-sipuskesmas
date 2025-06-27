@@ -42,7 +42,9 @@
         "sourcegraph",
         "stretchr",
         "urfave",
+        "usecase",
         "vektah",
+        "wireinject",
         "xrash"
     ]
 }

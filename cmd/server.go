@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -11,8 +10,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/IJ4L/internal/graph"
 	resolver "github.com/IJ4L/internal/graph/resolvers"
-	"github.com/IJ4L/pkg/db/postgres"
+	"github.com/IJ4L/internal/injector"
 	"github.com/IJ4L/pkg/utils"
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -23,16 +23,18 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	_, err = postgres.InitDB(cfg)
+	resolver, err := injector.InitializeResolver(cfg)
 	if err != nil {
-		log.Fatalf("failed to connect db: %v", err)
+		log.Fatalf("failed to initialize resolver: %v", err)
 	}
 
-	GraphQLServe(cfg)
+	graphQLServe(cfg, resolver)
 }
 
-func GraphQLServe(cfg utils.Config) {
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{}}))
+func graphQLServe(cfg utils.Config, rsl *resolver.Resolver) {
+	r := gin.Default()
+
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &resolver.Resolver{UserUsecase: rsl.UserUsecase}}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -45,9 +47,8 @@ func GraphQLServe(cfg utils.Config) {
 		Cache: lru.New[string](100),
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	r.POST("/query", gin.WrapH(srv))
+	r.GET("/", gin.WrapH(playground.Handler("GraphQL playground", "/query")))
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", cfg.App)
-	log.Fatal(http.ListenAndServe(":"+cfg.App, nil))
+	log.Fatal(r.Run(":" + cfg.App))
 }

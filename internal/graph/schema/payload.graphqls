@@ -1,0 +1,11 @@
+type StandardPayloadUser {
+  status: String!
+  message: String!
+  data: User!
+}
+
+type StandardPayloadUsers {
+  status: String!
+  message: String!
+  data: [User!]!
+}

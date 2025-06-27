@@ -34,3 +34,7 @@ func LoadConfig(path string) (config Config, err error) {
 
 	return
 }
+
+func NewConfig() (Config, error) {
+	return LoadConfig(".env")
+}

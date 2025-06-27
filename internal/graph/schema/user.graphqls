@@ -5,18 +5,20 @@
 type User {
   id: ID!
   name: String!
+  email: String!
 }
 
 type Query {
-  Users: [User!]!
+  users: StandardPayloadUsers!
 }
 
 input NewUser {
   name: String!
+  email: String!
 }
 
 type Mutation {
-  createUser(input: NewUser!): User!
+  createUser(input: NewUser!): StandardPayloadUser!
   deleteUser(id: ID!): Boolean!
-  updateUser(id: ID!, input: NewUser!): User!
+  updateUser(id: ID!, input: NewUser!): StandardPayloadUser!
 }
