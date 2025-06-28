@@ -17,22 +17,16 @@ func NewUserPgRepository(db *pgxpool.Pool) UserRepository {
 }
 
 func (r *userPgRepository) GetAllUsers(ctx context.Context) ([]*entity.UserEntity, error) {
-	data, err := r.db.Query(ctx, "SELECT id, name, email FROM users")
+	query := "SELECT id, name, email FROM users"
+
+	data, err := r.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	defer data.Close()
-	var users []*entity.UserEntity
-	for data.Next() {
-		var user entity.UserEntity
-		if err := data.Scan(&user.ID, &user.Name, &user.Email); err != nil {
-			return nil, err
-		}
-		users = append(users, &user)
-	}
-
-	if err := data.Err(); err != nil {
+	users, err := entity.ScanUserEntity(data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -40,8 +34,10 @@ func (r *userPgRepository) GetAllUsers(ctx context.Context) ([]*entity.UserEntit
 }
 
 func (r *userPgRepository) CreateUser(ctx context.Context, user *model.NewUser) (*entity.UserEntity, error) {
+	query := "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id"
+
 	var id string
-	err := r.db.QueryRow(ctx, "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id", user.Name, user.Email).Scan(&id)
+	err := r.db.QueryRow(ctx, query, user.Name, user.Email).Scan(&id)
 	if err != nil {
 		return nil, err
 	}

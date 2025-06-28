@@ -27,7 +27,7 @@ func (u *userUsecase) GetUsers(ctx context.Context) ([]*model.User, error) {
 		return nil, err
 	}
 
-	result := entity.UsersEntityToGraphModel(users)
+	result := entity.NewUsersEntityToGraphModel(users)
 	return result, nil
 }
 
@@ -37,6 +37,6 @@ func (u *userUsecase) CreateUser(ctx context.Context, user *model.NewUser) (*mod
 		return nil, err
 	}
 
-	graphUser := entity.UserEntityToGraphModel(userEntity)
+	graphUser := entity.NewUserEntityToGraphModel(userEntity)
 	return graphUser, nil
 }

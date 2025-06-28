@@ -1,11 +1,34 @@
 package entity
 
-import "github.com/IJ4L/internal/graph/model"
+import (
+	"github.com/IJ4L/internal/graph/model"
+	"github.com/jackc/pgx/v5"
+)
 
 type UserEntity struct {
 	ID    string
 	Name  string
 	Email string
+}
+
+func ScanUserEntity(data pgx.Rows) ([]*UserEntity, error) {
+	var users []*UserEntity
+	for data.Next() {
+		var user UserEntity
+		if err := data.Scan(&user.ID, &user.Name, &user.Email); err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+	if err := data.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		return nil, nil
+	}
+
+	return users, nil
 }
 
 func NewUserEntity(id, name, email string) *UserEntity {
@@ -16,7 +39,7 @@ func NewUserEntity(id, name, email string) *UserEntity {
 	}
 }
 
-func UserEntityToGraphModel(user *UserEntity) *model.User {
+func NewUserEntityToGraphModel(user *UserEntity) *model.User {
 	if user == nil {
 		return nil
 	}
@@ -27,15 +50,11 @@ func UserEntityToGraphModel(user *UserEntity) *model.User {
 	}
 }
 
-func UsersEntityToGraphModel(users []*UserEntity) []*model.User {
+func NewUsersEntityToGraphModel(users []*UserEntity) []*model.User {
 	var graphUsers []*model.User
 	for _, user := range users {
-		graphUser := model.User{
-			ID:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		}
-		graphUsers = append(graphUsers, &graphUser)
+		graphUser := NewUserEntityToGraphModel(user)
+		graphUsers = append(graphUsers, graphUser)
 	}
 	return graphUsers
 }
